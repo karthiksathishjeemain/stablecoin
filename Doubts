@@ -1,0 +1,3 @@
+when not to use msg.sender but we want to target the actual sender?
+constructor in DSCEngine.sol?
+i_dsc declaration with type(dsc address)?
