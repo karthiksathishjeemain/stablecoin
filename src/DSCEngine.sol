@@ -31,6 +31,7 @@ contract DSCEngine {
     error SBC_not_minted();
     error DSCEngine_Deposit_failed();
     error DSCEngine_tokenAddressesNotequaltoPriceFeed_Addresses();
+
     modifier allowed_token(address tokenaddress) {
         if (s_priceFeed[tokenaddress] == address(0)) {
             revert not_valid_token();
@@ -40,24 +41,23 @@ contract DSCEngine {
 
     DecentralizedStableCoin public immutable i_dsc;
 
-    constructor(address[] memory Token_Addresses, address[] memory priceFeed_addresses,address dscaddress) {
-        if (Token_Addresses.length!= priceFeed_addresses.length){
-            revert  DSCEngine_tokenAddressesNotequaltoPriceFeed_Addresses();
+    constructor(address[] memory Token_Addresses, address[] memory priceFeed_addresses, address dscaddress) {
+        if (Token_Addresses.length != priceFeed_addresses.length) {
+            revert DSCEngine_tokenAddressesNotequaltoPriceFeed_Addresses();
         }
-        for (uint i = 0; i < Token_Addresses.length; i++) {
-          s_priceFeed[Token_Addresses[i]]= priceFeed_addresses[i];
-          s_token_addresses.push(Token_Addresses[i]);
+        for (uint256 i = 0; i < Token_Addresses.length; i++) {
+            s_priceFeed[Token_Addresses[i]] = priceFeed_addresses[i];
+            s_token_addresses.push(Token_Addresses[i]);
         }
         i_dsc = DecentralizedStableCoin(dscaddress);
     }
 
     uint256 constant Value_of_SBC_in_USD = 1;
-    mapping (address token_address => address pricefeed)public s_priceFeed;
+    mapping(address token_address => address pricefeed) public s_priceFeed;
     mapping(address user => uint256 amountofSBC) mintSBC;
     // mapping(address user => address tokenaddress) usertokencollateral;
     mapping(address user => mapping(address token => uint256 amount)) usertokencollateralamount;
-    address[]  s_token_addresses;
-    
+    address[] s_token_addresses;
 
     function Deposit_and_mint(address token_address, uint256 amount_of_token, uint256 amount_of_SBC) public {
         depositcollateral(token_address, amount_of_token);
@@ -74,7 +74,7 @@ contract DSCEngine {
         }
     }
 
-    function _mintSBC(address token_address,uint256 amount_of_SBC) public {
+    function _mintSBC(address token_address, uint256 amount_of_SBC) public {
         mintSBC[msg.sender] += amount_of_SBC;
         checkhealthfactor(token_address, amount_of_SBC);
         bool minted = i_dsc.mint(msg.sender, amount_of_SBC);
@@ -85,9 +85,7 @@ contract DSCEngine {
 
     function checkhealthfactor(address token_address, uint256 amountofSBC) public {
         // uint256 tokenamount = usertokencollateralamount[user];
-        bool check = gethealthfactor(
-            token_address, usertokencollateralamount[msg.sender][token_address], amountofSBC
-        );
+        bool check = gethealthfactor(token_address, usertokencollateralamount[msg.sender][token_address], amountofSBC);
         if (check != true) {
             revert didNotPassTheHealthfactor();
         }
@@ -103,5 +101,4 @@ contract DSCEngine {
         (, int256 price,,,) = pricefeed.latestRoundData();
         return ((uint256(price) * 1e10) * amount_of_token) / 1e18;
     }
-    
 }
